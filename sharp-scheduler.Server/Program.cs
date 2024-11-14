@@ -1,6 +1,8 @@
 
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 using sharp_scheduler.Server.Data;
+using sharp_scheduler.Server.Services;
 
 namespace sharp_scheduler.Server
 {
@@ -19,9 +21,16 @@ namespace sharp_scheduler.Server
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DatabaseConnection"))
-                .EnableSensitiveDataLogging()
+                .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking
             ));
+
+            builder.Services.AddQuartz(q =>
+            {
+                q.UseMicrosoftDependencyInjectionJobFactory();
+            });
+            builder.Services.AddQuartzHostedService();
+            builder.Services.AddHostedService<JobExecutionServiceStartup>();
 
             var app = builder.Build();
 
