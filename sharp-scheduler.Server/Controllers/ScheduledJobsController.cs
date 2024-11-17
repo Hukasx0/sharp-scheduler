@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 using sharp_scheduler.Server.Data;
 using sharp_scheduler.Server.DTOs;
 using sharp_scheduler.Server.Models;
+using sharp_scheduler.Server.Services;
 using System.Text.RegularExpressions;
 
 namespace sharp_scheduler.Server.Controllers
@@ -13,10 +15,12 @@ namespace sharp_scheduler.Server.Controllers
     public class ScheduledJobsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ISchedulerFactory _schedulerFactory;
 
-        public ScheduledJobsController(AppDbContext context)
+        public ScheduledJobsController(AppDbContext context, ISchedulerFactory schedulerFactory)
         {
             _context = context;
+            _schedulerFactory = schedulerFactory;
         }
 
         [HttpGet]
@@ -26,6 +30,7 @@ namespace sharp_scheduler.Server.Controllers
             return Ok(jobs);
         }
 
+        // cron expression in Quartz .NET format
         [HttpPost]
         public async Task<IActionResult> Create(ScheduledJobPostDTO newJob)
         {
@@ -45,6 +50,8 @@ namespace sharp_scheduler.Server.Controllers
                     await _context.ScheduledJobs.AddAsync(job);
                     await _context.SaveChangesAsync();
 
+                    await ScheduleJob(job);
+
                     await transaction.CommitAsync();
 
                     return CreatedAtAction(nameof(GetAll), new { id = job.Id }, job);
@@ -58,6 +65,7 @@ namespace sharp_scheduler.Server.Controllers
             }
         }
 
+        // cron expression in Quartz .NET format
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, ScheduledJobPostDTO updateJob)
         {
@@ -72,6 +80,12 @@ namespace sharp_scheduler.Server.Controllers
 
             await _context.SaveChangesAsync();
 
+            // update the schedule
+            var scheduler = await _schedulerFactory.GetScheduler();
+            await scheduler.DeleteJob(new JobKey($"job-{existingJob.Id}"));
+
+            await ScheduleJob(existingJob);
+
             return NoContent();
         }
 
@@ -84,65 +98,42 @@ namespace sharp_scheduler.Server.Controllers
             _context.ScheduledJobs.Remove(job);
             await _context.SaveChangesAsync();
 
+            var scheduler = await _schedulerFactory.GetScheduler();
+            await scheduler.DeleteJob(new JobKey($"job-{job.Id}"));
+
             return NoContent();
         }
 
         // import jobs from a cron file
-        [HttpPost("import")]
+        // import from Unix/Linux format
+       /* [HttpPost("import")]
         public async Task<IActionResult> ImportCronJobs(IFormFile cronFile)
-        {
-            if (cronFile == null || cronFile.Length == 0)
-            {
-                return BadRequest("No file uploaded.");
-            }
-
-            var jobList = new List<ScheduledJob>();
-            using (var reader = new StreamReader(cronFile.OpenReadStream()))
-            {
-                string line;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    var match = Regex.Match(line, @"^(.*)\s+(.*)$");
-                    if (match.Success)
-                    {
-                        var cronExpression = match.Groups[1].Value;
-                        var command = match.Groups[2].Value;
-
-                        jobList.Add(new ScheduledJob
-                        {
-                            Name = command.Split(' ')[0],
-                            Command = command,
-                            CronExpression = cronExpression,
-                            CreatedAt = DateTime.UtcNow,
-                            LastResult = ""
-                        });
-                    }
-                }
-            }
-
-            await _context.ScheduledJobs.AddRangeAsync(jobList);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = $"{jobList.Count} jobs imported successfully." });
-        }
+        {  
+        }*/
 
         // export all jobs in a cron file
+        // export in Unix/Linux format
         [HttpGet("export")]
-        public async Task<IActionResult> ExportCronJobs()
+        /*public async Task<IActionResult> ExportCronJobs()
         {
-            var jobs = await _context.ScheduledJobs.ToListAsync();
-            var cronLines = new List<string>();
+        }*/
 
-            foreach (var job in jobs)
-            {
-                var cronLine = $"{job.CronExpression} {job.Command}";
-                cronLines.Add(cronLine);
-            }
 
-            var cronFileContent = string.Join("\n", cronLines);
-            var fileBytes = System.Text.Encoding.UTF8.GetBytes(cronFileContent);
+        private async Task ScheduleJob(ScheduledJob task)
+        {
+            var scheduler = await _schedulerFactory.GetScheduler();
 
-            return File(fileBytes, "text/plain", "cron_jobs.txt");
+            var job = JobBuilder.Create<JobExecutionService>()
+                .WithIdentity($"job-{task.Id}")
+                .UsingJobData("jobId", task.Id)
+                .Build();
+
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity($"trigger-{task.Id}")
+                .WithCronSchedule(task.CronExpression)
+                .Build();
+
+            await scheduler.ScheduleJob(job, trigger);
         }
     }
 }
