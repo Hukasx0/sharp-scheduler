@@ -1,4 +1,7 @@
 
+using Microsoft.EntityFrameworkCore;
+using sharp_scheduler.Server.Data;
+
 namespace sharp_scheduler.Server
 {
     public class Program
@@ -13,6 +16,13 @@ namespace sharp_scheduler.Server
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(builder.Configuration.GetConnectionString("DatabaseConnection"))
+                    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            });
 
             var app = builder.Build();
 
