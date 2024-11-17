@@ -34,6 +34,11 @@ namespace sharp_scheduler.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ScheduledJobPostDTO newJob)
         {
+            if (!IsValidCronExpression(newJob.CronExpression))
+            {
+                return BadRequest("Invalid cron expression format.");
+            }
+
             var job = new ScheduledJob
             {
                 Name = newJob.Name,
@@ -71,6 +76,11 @@ namespace sharp_scheduler.Server.Controllers
         {
             var existingJob = await _context.ScheduledJobs.FindAsync(id);
             if (existingJob == null) return NotFound();
+
+            if (!IsValidCronExpression(updateJob.CronExpression))
+            {
+                return BadRequest("Invalid cron expression format.");
+            }
 
             existingJob.Name = updateJob.Name;
             existingJob.Command = updateJob.Command;
@@ -134,6 +144,19 @@ namespace sharp_scheduler.Server.Controllers
                 .Build();
 
             await scheduler.ScheduleJob(job, trigger);
+        }
+
+        private bool IsValidCronExpression(string cronExpression)
+        {
+            try
+            {
+                Quartz.CronExpression.ValidateExpression(cronExpression);
+                return true;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
     }
 }
