@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using sharp_scheduler.Server.Data;
 using sharp_scheduler.Server.DTOs;
 using sharp_scheduler.Server.Models;
+using System.Text.RegularExpressions;
 
 namespace sharp_scheduler.Server.Controllers
 {
@@ -84,6 +85,64 @@ namespace sharp_scheduler.Server.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // import jobs from a cron file
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportCronJobs(IFormFile cronFile)
+        {
+            if (cronFile == null || cronFile.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            var jobList = new List<ScheduledJob>();
+            using (var reader = new StreamReader(cronFile.OpenReadStream()))
+            {
+                string line;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    var match = Regex.Match(line, @"^(.*)\s+(.*)$");
+                    if (match.Success)
+                    {
+                        var cronExpression = match.Groups[1].Value;
+                        var command = match.Groups[2].Value;
+
+                        jobList.Add(new ScheduledJob
+                        {
+                            Name = command.Split(' ')[0],
+                            Command = command,
+                            CronExpression = cronExpression,
+                            CreatedAt = DateTime.UtcNow,
+                            LastResult = ""
+                        });
+                    }
+                }
+            }
+
+            await _context.ScheduledJobs.AddRangeAsync(jobList);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = $"{jobList.Count} jobs imported successfully." });
+        }
+
+        // export all jobs in a cron file
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportCronJobs()
+        {
+            var jobs = await _context.ScheduledJobs.ToListAsync();
+            var cronLines = new List<string>();
+
+            foreach (var job in jobs)
+            {
+                var cronLine = $"{job.CronExpression} {job.Command}";
+                cronLines.Add(cronLine);
+            }
+
+            var cronFileContent = string.Join("\n", cronLines);
+            var fileBytes = System.Text.Encoding.UTF8.GetBytes(cronFileContent);
+
+            return File(fileBytes, "text/plain", "cron_jobs.txt");
         }
     }
 }
