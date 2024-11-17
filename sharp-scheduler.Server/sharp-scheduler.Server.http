@@ -1,0 +1,6 @@
+@sharp_scheduler.Server_HostAddress = http://localhost:5206
+
+GET {{sharp_scheduler.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

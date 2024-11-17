@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharp-scheduler.Server", "sharp-scheduler.Server\sharp-scheduler.Server.csproj", "{D8E04081-7AB5-471E-B152-1AF3FCE9E113}"
+EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "sharp-scheduler.client", "sharp-scheduler.client\sharp-scheduler.client.esproj", "{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8E04081-7AB5-471E-B152-1AF3FCE9E113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8E04081-7AB5-471E-B152-1AF3FCE9E113}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8E04081-7AB5-471E-B152-1AF3FCE9E113}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8E04081-7AB5-471E-B152-1AF3FCE9E113}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F84BD53E-C9AF-40FF-9AF0-CE9E1F3AE906}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED9D3A8A-9422-4CDE-BA87-BBD754FBA1BA}
+	EndGlobalSection
+EndGlobal
