@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
@@ -12,6 +13,7 @@ namespace sharp_scheduler.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ScheduledJobsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -70,6 +72,30 @@ namespace sharp_scheduler.Server.Controllers
             }
         }
 
+        [HttpDelete]
+        public async Task<IActionResult> DeleteAll()
+        {
+            var jobs = await _context.ScheduledJobs.ToListAsync();
+
+            if (jobs.Count == 0)
+            {
+                return NotFound("No scheduled jobs found to delete.");
+            }
+
+            _context.ScheduledJobs.RemoveRange(jobs);
+            await _context.SaveChangesAsync();
+
+            var scheduler = await _schedulerFactory.GetScheduler();
+
+            foreach (var job in jobs)
+            {
+                var jobKey = new JobKey($"job-{job.Id}");
+                await scheduler.DeleteJob(jobKey);
+            }
+
+            return NoContent();
+        }
+
         // cron expression in Quartz .NET format
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, ScheduledJobPostDTO updateJob)
@@ -115,18 +141,21 @@ namespace sharp_scheduler.Server.Controllers
         }
 
         // import jobs from a cron file
-        // import from Unix/Linux format
-       /* [HttpPost("import")]
+        /*[HttpPost("import")]
         public async Task<IActionResult> ImportCronJobs(IFormFile cronFile)
-        {  
+        {
+            
         }*/
 
-        // export all jobs in a cron file
-        // export in Unix/Linux format
-        [HttpGet("export")]
-        /*public async Task<IActionResult> ExportCronJobs()
+
+        // export all jobs in a cron file (without conversion)
+        /*[HttpGet("export")]
+        public async Task<IActionResult> ExportCronJobs()
         {
+            
         }*/
+
+
 
 
         private async Task ScheduleJob(ScheduledJob task)

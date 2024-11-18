@@ -8,10 +8,13 @@ namespace sharp_scheduler.Server.Data
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions) { }
 
         public DbSet<ScheduledJob> ScheduledJobs { get; set; }
+        public DbSet<Account> Accounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ScheduledJob>()
+                .HasKey(t => t.Id);
+            modelBuilder.Entity<Account>()
                 .HasKey(t => t.Id);
         }
     }
