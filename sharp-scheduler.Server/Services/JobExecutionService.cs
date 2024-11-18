@@ -46,17 +46,17 @@ namespace sharp_scheduler.Server.Services
 
                 job.LastExecution = DateTime.UtcNow;
 
-                /*var jobExecutionLog = new JobExecutionLog
+                var jobExecutionLog = new JobExecutionLog
                 {
                     JobId = job.Id,
+                    JobName = job.Name,
                     Timestamp = DateTime.UtcNow,
                     Output = output,
                     Error = error,
                     Status = string.IsNullOrEmpty(error) ? "Success" : "Failure"
-                };*/
-
+                };
                 _context.Entry(job).State = EntityState.Modified;
-              //  _context.JobExecutionLogs.Add(jobExecutionLog);
+                _context.JobExecutionLogs.Add(jobExecutionLog);
 
                 await _context.SaveChangesAsync();
 
