@@ -36,20 +36,27 @@ namespace sharp_scheduler.Server.Controllers
             var users = await _context.Accounts.ToListAsync();
             return Ok(users);
         }
-        
+
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
+        public async Task<IActionResult> Login(LoginDTO loginDto)
         {
-            var user = await _context.Accounts.FirstOrDefaultAsync(x => x.Username == loginDto.Username);
+            var user = await _context.Accounts
+                .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
-            if (user == null) return Unauthorized("Invalid username or password");
-
-            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.HashedPassword)) 
+            if (user == null)
             {
-                return Unauthorized("Invalid username or password");
+                await LogLoginAttempt(loginDto.Username, "Failure");
+                return Unauthorized("Invalid username or password.");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.HashedPassword))
+            {
+                await LogLoginAttempt(loginDto.Username, "Failure");
+                return Unauthorized("Invalid username or password.");
             }
 
             var token = GenerateJwtToken(user);
+            await LogLoginAttempt(loginDto.Username, "Success");
 
             return Ok(new { Token = token });
         }
@@ -176,6 +183,36 @@ namespace sharp_scheduler.Server.Controllers
             return NoContent();
         }
 
+        [HttpGet("login-logs")]
+        [Authorize]
+        public async Task<IActionResult> GetLoginLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 50 : pageSize;
+
+            var logsQuery = _context.LoginLogs.AsQueryable();
+
+            var totalLogs = await logsQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalLogs / pageSize);
+
+            var logs = await logsQuery
+                .OrderByDescending(l => l.Timestamp)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new
+            {
+                TotalLogs = totalLogs,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Logs = logs
+            };
+
+            return Ok(result);
+        }
+
+
 
 
         private string GenerateJwtToken(Account user)
@@ -192,8 +229,8 @@ namespace sharp_scheduler.Server.Controllers
 
             var claims = new[]
             {
-        new Claim(ClaimTypes.Name, user.Username)
-    };
+                new Claim(ClaimTypes.Name, user.Username)
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -207,6 +244,36 @@ namespace sharp_scheduler.Server.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private async Task LogLoginAttempt(string username, string status)
+        {
+            var ipAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            var loginLog = new LoginLog
+            {
+                Username = username,
+                Status = status,
+                Timestamp = DateTime.UtcNow,
+                IpAddress = ipAddress
+            };
+
+            _context.LoginLogs.Add(loginLog);
+            await _context.SaveChangesAsync();
+
+            var logCount = await _context.LoginLogs.CountAsync();
+            if (logCount > 1000)
+            {
+                var oldestLog = await _context.LoginLogs
+                    .OrderBy(l => l.Timestamp)
+                    .FirstOrDefaultAsync();
+
+                if (oldestLog != null)
+                {
+                    _context.LoginLogs.Remove(oldestLog);
+                    await _context.SaveChangesAsync();
+                }
+            }
         }
     }
 }

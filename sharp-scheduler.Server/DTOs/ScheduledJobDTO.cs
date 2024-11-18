@@ -8,7 +8,6 @@
         public string CronExpression { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? LastExecution { get; set; }
-        public string? LastResult { get; set; }
     }
 
     public class ScheduledJobPostDTO

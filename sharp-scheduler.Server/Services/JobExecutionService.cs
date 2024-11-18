@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Quartz;
 using sharp_scheduler.Server.Data;
+using sharp_scheduler.Server.Models;
 using System.Diagnostics;
 
 namespace sharp_scheduler.Server.Services
@@ -44,16 +45,27 @@ namespace sharp_scheduler.Server.Services
                 await process.WaitForExitAsync();
 
                 job.LastExecution = DateTime.UtcNow;
-                job.LastResult = string.IsNullOrEmpty(error) ? output : error;
-                
+
+                /*var jobExecutionLog = new JobExecutionLog
+                {
+                    JobId = job.Id,
+                    Timestamp = DateTime.UtcNow,
+                    Output = output,
+                    Error = error,
+                    Status = string.IsNullOrEmpty(error) ? "Success" : "Failure"
+                };*/
+
                 _context.Entry(job).State = EntityState.Modified;
+              //  _context.JobExecutionLogs.Add(jobExecutionLog);
+
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                Console.WriteLine($"Error executing job {jobId}: {ex.Message}");
                 throw;
             }
         }

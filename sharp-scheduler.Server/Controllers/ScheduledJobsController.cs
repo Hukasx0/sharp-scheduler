@@ -36,6 +36,11 @@ namespace sharp_scheduler.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ScheduledJobPostDTO newJob)
         {
+            if (string.IsNullOrEmpty(newJob.Name) || string.IsNullOrEmpty(newJob.Command) || string.IsNullOrEmpty(newJob.CronExpression))
+            {
+                return BadRequest("Name, Command, and CronExpression are required.");
+            }
+
             if (!IsValidCronExpression(newJob.CronExpression))
             {
                 return BadRequest("Invalid cron expression format.");
@@ -47,7 +52,6 @@ namespace sharp_scheduler.Server.Controllers
                 Command = newJob.Command,
                 CronExpression = newJob.CronExpression,
                 CreatedAt = DateTime.UtcNow,
-                LastResult = ""
             };
 
             using (var transaction = await  _context.Database.BeginTransactionAsync())
@@ -138,6 +142,34 @@ namespace sharp_scheduler.Server.Controllers
             await scheduler.DeleteJob(new JobKey($"job-{job.Id}"));
 
             return NoContent();
+        }
+
+        [HttpGet("logs")]
+        public async Task<IActionResult> GetJobLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 50 : pageSize;
+
+            var logsQuery = _context.JobExecutionLogs.AsQueryable();
+
+            var totalLogs = await logsQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalLogs / pageSize);
+
+            var logs = await logsQuery
+                .OrderByDescending(l => l.Timestamp)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new
+            {
+                TotalLogs = totalLogs,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Logs = logs
+            };
+
+            return Ok(result);
         }
 
         // import jobs from a cron file
