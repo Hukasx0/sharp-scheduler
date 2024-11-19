@@ -52,16 +52,20 @@ namespace sharp_scheduler.Server.Controllers
                 Command = newJob.Command,
                 CronExpression = newJob.CronExpression,
                 CreatedAt = DateTime.UtcNow,
+                IsActive = newJob.IsActive
             };
 
-            using (var transaction = await  _context.Database.BeginTransactionAsync())
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
                     await _context.ScheduledJobs.AddAsync(job);
                     await _context.SaveChangesAsync();
 
-                    await ScheduleJob(job);
+                    if (job.IsActive)
+                    {
+                        await ScheduleJob(job);
+                    }
 
                     await transaction.CommitAsync();
 
@@ -74,6 +78,52 @@ namespace sharp_scheduler.Server.Controllers
                     throw;
                 }
             }
+        }
+
+        [HttpPut("active-many")]
+        public async Task<IActionResult> ActivateJobs([FromBody] List<ActivateManyJobDTO> jobUpdates)
+        {
+            if (jobUpdates == null || !jobUpdates.Any())
+            {
+                return BadRequest("No jobs to update.");
+            }
+
+            var jobs = await _context.ScheduledJobs
+                .Where(j => jobUpdates.Select(u => u.Id).Contains(j.Id))
+                .ToListAsync();
+
+            if (jobs.Count != jobUpdates.Count)
+            {
+                return NotFound("Some jobs were not found.");
+            }
+
+            var scheduler = await _schedulerFactory.GetScheduler();
+
+            foreach (var update in jobUpdates)
+            {
+                var job = jobs.FirstOrDefault(j => j.Id == update.Id);
+                if (job == null)
+                {
+                    continue;
+                }
+
+                job.IsActive = update.IsActive;
+                _context.Entry(job).State = EntityState.Modified;
+
+                if (update.IsActive)
+                {
+                    await ScheduleJob(job);
+                }
+                else
+                {
+                    var jobKey = new JobKey($"job-{job.Id}");
+                    await scheduler.DeleteJob(jobKey);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [HttpPost("many")]
@@ -195,6 +245,31 @@ namespace sharp_scheduler.Server.Controllers
             await scheduler.DeleteJob(new JobKey($"job-{existingJob.Id}"));
 
             await ScheduleJob(existingJob);
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}/active")]
+        public async Task<IActionResult> ActivateJob(int id, [FromBody] ActivateJobDTO isActive)
+        {
+            var job = await _context.ScheduledJobs.FindAsync(id);
+            if (job == null) return NotFound();
+
+            job.IsActive = isActive.active;
+
+            _context.Entry(job).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            var scheduler = await _schedulerFactory.GetScheduler();
+            if (isActive.active)
+            {
+                await ScheduleJob(job);
+            }
+            else
+            {
+                var jobKey = new JobKey($"job-{job.Id}");
+                await scheduler.DeleteJob(jobKey);
+            }
 
             return NoContent();
         }

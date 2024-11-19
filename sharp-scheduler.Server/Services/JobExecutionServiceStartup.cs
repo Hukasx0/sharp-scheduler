@@ -23,7 +23,7 @@ namespace sharp_scheduler.Server.Services
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var scheduler = await _schedulerFactory.GetScheduler(cancellationToken);
 
-            var jobs = await dbContext.ScheduledJobs.ToListAsync();
+            var jobs = await dbContext.ScheduledJobs.Where(j => j.IsActive).ToListAsync();
             foreach (var job in jobs)
             {
                 await ScheduleJob(scheduler, job);
