@@ -76,6 +76,76 @@ namespace sharp_scheduler.Server.Controllers
             }
         }
 
+        [HttpPost("many")]
+        public async Task<IActionResult> CreateMany(List<ScheduledJobPostDTO> newJobs)
+        {
+            if (newJobs == null || newJobs.Count == 0)
+            {
+                return BadRequest("At least one job must be provided.");
+            }
+
+            var invalidJobs = new List<ScheduledJobPostDTO>();
+            var jobsToAdd = new List<ScheduledJob>();
+
+            foreach (var newJob in newJobs)
+            {
+                if (string.IsNullOrEmpty(newJob.Name) || string.IsNullOrEmpty(newJob.Command) || string.IsNullOrEmpty(newJob.CronExpression))
+                {
+                    invalidJobs.Add(newJob);
+                    continue;
+                }
+
+                if (!IsValidCronExpression(newJob.CronExpression))
+                {
+                    invalidJobs.Add(newJob);
+                    continue;
+                }
+
+                var job = new ScheduledJob
+                {
+                    Name = newJob.Name,
+                    Command = newJob.Command,
+                    CronExpression = newJob.CronExpression,
+                    CreatedAt = DateTime.UtcNow,
+                };
+
+                jobsToAdd.Add(job);
+            }
+
+            if (invalidJobs.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Some jobs are invalid.",
+                    invalidJobs = invalidJobs
+                });
+            }
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    await _context.ScheduledJobs.AddRangeAsync(jobsToAdd);
+                    await _context.SaveChangesAsync();
+
+                    foreach (var job in jobsToAdd)
+                    {
+                        await ScheduleJob(job);
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return CreatedAtAction(nameof(GetAll), new { }, jobsToAdd);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    Console.WriteLine(ex.ToString());
+                    return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing the jobs.");
+                }
+            }
+        }
+
         [HttpDelete]
         public async Task<IActionResult> DeleteAll()
         {
