@@ -31,10 +31,36 @@ namespace sharp_scheduler.Server.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var users = await _context.Accounts.ToListAsync();
-            return Ok(users);
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 50 : pageSize;
+
+            var usersQuery = _context.Accounts.AsQueryable();
+
+            var totalUsers = await usersQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
+
+            var users = await usersQuery
+                .OrderBy(u => u.Id)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new AccountDTO
+                {
+                    Id = u.Id,
+                    Username = u.Username
+                })
+                .ToListAsync();
+
+            var result = new
+            {
+                TotalUsers = totalUsers,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Users = users
+            };
+
+            return Ok(result);
         }
 
         [HttpPost("login")]

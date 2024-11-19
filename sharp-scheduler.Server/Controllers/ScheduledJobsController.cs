@@ -26,10 +26,31 @@ namespace sharp_scheduler.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
-            var jobs = await _context.ScheduledJobs.ToListAsync();
-            return Ok(jobs);
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 50 : pageSize;
+
+            var jobsQuery = _context.ScheduledJobs.AsQueryable();
+
+            var totalJobs = await jobsQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalJobs / pageSize);
+
+            var jobs = await jobsQuery
+                .OrderBy(j => j.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new
+            {
+                TotalJobs = totalJobs,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Jobs = jobs
+            };
+
+            return Ok(result);
         }
 
         // cron expression in Quartz .NET format
