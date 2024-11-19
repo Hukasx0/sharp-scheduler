@@ -34,7 +34,8 @@ namespace sharp_scheduler.Server.Controllers
         public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             page = page < 1 ? 1 : page;
-            pageSize = pageSize < 1 ? 50 : pageSize;
+            pageSize = pageSize < 1 ? 1 : pageSize;
+            pageSize = pageSize > 50 ? 50 : pageSize;
 
             var usersQuery = _context.Accounts.AsQueryable();
 
@@ -214,7 +215,8 @@ namespace sharp_scheduler.Server.Controllers
         public async Task<IActionResult> GetLoginLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             page = page < 1 ? 1 : page;
-            pageSize = pageSize < 1 ? 50 : pageSize;
+            pageSize = pageSize < 1 ? 1 : pageSize;
+            pageSize = pageSize > 50 ? 50 : pageSize;
 
             var logsQuery = _context.LoginLogs.AsQueryable();
 
