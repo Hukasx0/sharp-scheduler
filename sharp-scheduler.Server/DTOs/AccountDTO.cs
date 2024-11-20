@@ -18,7 +18,7 @@
         public string ConfirmNewPassword { get; set; } = string.Empty;
     }
 
-    public class DeleteAccountDTO
+    public class AccountPasswordDTO
     {
         public string Password { get; set; } = string.Empty;
     }

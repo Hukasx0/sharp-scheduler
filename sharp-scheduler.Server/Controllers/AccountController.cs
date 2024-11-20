@@ -131,7 +131,7 @@ namespace sharp_scheduler.Server.Controllers
 
         [HttpDelete("delete-account")]
         [Authorize]
-        public async Task<IActionResult> DeleteAccount(DeleteAccountDTO deleteAccountDto)
+        public async Task<IActionResult> DeleteAccount(AccountPasswordDTO deleteAccountDto)
         {
             var username = User.Identity?.Name;
 
@@ -187,7 +187,7 @@ namespace sharp_scheduler.Server.Controllers
 
         [HttpDelete("delete-all-accounts")]
         [Authorize]
-        public async Task<IActionResult> DeleteAll([FromBody] DeleteAccountDTO verifyPasswordDto)
+        public async Task<IActionResult> DeleteAll([FromBody] AccountPasswordDTO verifyPasswordDto)
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var currentUser = await _context.Accounts.FindAsync(int.Parse(currentUserId));
@@ -238,6 +238,42 @@ namespace sharp_scheduler.Server.Controllers
             };
 
             return Ok(result);
+        }
+
+        [HttpDelete("login-logs")]
+        public async Task<IActionResult> DeleteLoginLogs(AccountPasswordDTO verifyPasswordDto)
+        {
+            var username = User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(username))
+            {
+                return Unauthorized("User identity is missing.");
+            }
+
+            var user = await _context.Accounts
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null)
+            {
+                return Unauthorized("User not found.");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(verifyPasswordDto.Password, user.HashedPassword))
+            {
+                return BadRequest("Incorrect password.");
+            }
+
+            var logs = await _context.LoginLogs.ToListAsync();
+
+            if (!logs.Any())
+            {
+                return NotFound("No login logs found to delete.");
+            }
+
+            _context.LoginLogs.RemoveRange(logs);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
 

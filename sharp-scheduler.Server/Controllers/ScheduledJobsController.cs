@@ -340,20 +340,21 @@ namespace sharp_scheduler.Server.Controllers
             return Ok(result);
         }
 
-        // import jobs from a cron file
-        /*[HttpPost("import")]
-        public async Task<IActionResult> ImportCronJobs(IFormFile cronFile)
+        [HttpDelete("logs")]
+        public async Task<IActionResult> DeleteJobLogs()
         {
-            
-        }*/
+            var logs = await _context.JobExecutionLogs.ToListAsync();
 
+            if (!logs.Any())
+            {
+                return NotFound("No job execution logs found to delete.");
+            }
 
-        // export all jobs in a cron file (without conversion)
-        /*[HttpGet("export")]
-        public async Task<IActionResult> ExportCronJobs()
-        {
-            
-        }*/
+            _context.JobExecutionLogs.RemoveRange(logs);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
 
 
 
