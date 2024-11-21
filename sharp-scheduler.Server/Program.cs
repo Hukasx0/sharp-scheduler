@@ -65,6 +65,8 @@ namespace sharp_scheduler.Server
 
             builder.Services.AddTransient<AdminAccountInitializer>();
 
+            builder.Services.AddBruteForceProtection();
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())

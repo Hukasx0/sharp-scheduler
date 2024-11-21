@@ -8,6 +8,7 @@ using Quartz;
 using sharp_scheduler.Server.Data;
 using sharp_scheduler.Server.DTOs;
 using sharp_scheduler.Server.Models;
+using sharp_scheduler.Server.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -21,12 +22,14 @@ namespace sharp_scheduler.Server.Controllers
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AccountController> _logger;
+        private readonly LoginBruteforceProtectionService _bruteForceProtectionService;
 
-        public AccountController(AppDbContext context, IConfiguration configuration, ILogger<AccountController> logger)
+        public AccountController(AppDbContext context, IConfiguration configuration, ILogger<AccountController> logger, LoginBruteforceProtectionService bruteforceProtectionService)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
+            _bruteForceProtectionService = bruteforceProtectionService;
         }
 
         [HttpGet]
@@ -67,20 +70,32 @@ namespace sharp_scheduler.Server.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDTO loginDto)
         {
+            string ipAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            
+            if (!await _bruteForceProtectionService.IsLoginAttemptAllowed(loginDto.Username, ipAddress))
+            {
+                _logger.LogWarning($"Warning! Potential bruteforce attack from IP \"{ipAddress}\" (for username \"{loginDto.Username}\")");
+                return StatusCode(StatusCodes.Status429TooManyRequests, "Too many login attempts. Please try again later");
+            }
+            
             var user = await _context.Accounts
                 .FirstOrDefaultAsync(u => u.Username == loginDto.Username);
 
             if (user == null)
             {
+                _bruteForceProtectionService.IncrementIpAttempts(ipAddress);
                 await LogLoginAttempt(loginDto.Username, "Failure");
                 return Unauthorized("Invalid username or password.");
             }
 
             if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.HashedPassword))
             {
+                _bruteForceProtectionService.IncrementIpAttempts(ipAddress);
                 await LogLoginAttempt(loginDto.Username, "Failure");
                 return Unauthorized("Invalid username or password.");
             }
+
+            _bruteForceProtectionService.ResetIpAttempts(ipAddress);
 
             var token = GenerateJwtToken(user);
             await LogLoginAttempt(loginDto.Username, "Success");
