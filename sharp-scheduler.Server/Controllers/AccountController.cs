@@ -294,26 +294,32 @@ namespace sharp_scheduler.Server.Controllers
 
 
 
+        // Generates a JWT token for a user, containing the user's username as a claim.
+        // The token is signed using a symmetric key, with an expiration time set to 1 day.
         private string GenerateJwtToken(Account user)
         {
             var jwtKey = _configuration["Jwt:Key"];
             var jwtIssuer = _configuration["Jwt:Issuer"];
             var jwtAudience = _configuration["Jwt:Audience"];
 
+            // Check if the JWT configuration is properly set in the appsettings or environment variables.
             if (string.IsNullOrEmpty(jwtKey) || string.IsNullOrEmpty(jwtIssuer) || string.IsNullOrEmpty(jwtAudience))
             {
                 _logger.LogError("JWT configuration is incomplete. Please check your appsettings.json or environment variables.");
                 throw new InvalidOperationException("JWT configuration is incomplete.");
             }
 
+            // Define the claims for the JWT token, which includes the username of the user.
             var claims = new[]
             {
                 new Claim(ClaimTypes.Name, user.Username)
             };
 
+            // Create a symmetric key from the JWT secret key and define signing credentials
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
+            // Create the JWT token with the necessary claims and expiration settings.
             var token = new JwtSecurityToken(
                 issuer: jwtIssuer,
                 audience: jwtAudience,
@@ -322,13 +328,17 @@ namespace sharp_scheduler.Server.Controllers
                 signingCredentials: creds
             );
 
+            // Return the generated token as a string
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        // Logs a login attempt in the database, storing the username, status, and IP address.
+        // The method ensures that only the most recent 1000 login attempts are kept in the database.
         private async Task LogLoginAttempt(string username, string status)
         {
             var ipAddress = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
+            // Create a new login log entry with the given details.
             var loginLog = new LoginLog
             {
                 Username = username,
@@ -337,9 +347,11 @@ namespace sharp_scheduler.Server.Controllers
                 IpAddress = ipAddress
             };
 
+            // Add the new log entry to the database and save the changes.
             _context.LoginLogs.Add(loginLog);
             await _context.SaveChangesAsync();
 
+            // Check the total number of login logs and remove the oldest log if the count exceeds 1000.
             var logCount = await _context.LoginLogs.CountAsync();
             if (logCount > 1000)
             {
@@ -349,6 +361,7 @@ namespace sharp_scheduler.Server.Controllers
 
                 if (oldestLog != null)
                 {
+                    // Remove the oldest log entry from the database to maintain the log count.
                     _context.LoginLogs.Remove(oldestLog);
                     await _context.SaveChangesAsync();
                 }

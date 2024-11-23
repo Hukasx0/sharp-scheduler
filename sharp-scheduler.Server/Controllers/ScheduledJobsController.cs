@@ -359,34 +359,44 @@ namespace sharp_scheduler.Server.Controllers
 
 
 
+        // Schedules a job with the Quartz scheduler based on the provided task's cron expression.
+        // The job is linked to the specific task ID to execute the corresponding job logic.
         private async Task ScheduleJob(ScheduledJob task)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
 
+            // Create a new Quartz job, passing the task's ID to the job for execution.
             var job = JobBuilder.Create<JobExecutionService>()
                 .WithIdentity($"job-{task.Id}")
                 .UsingJobData("jobId", task.Id)
                 .Build();
 
+            // Create a trigger based on the task's cron expression to control the job's schedule.
             var trigger = TriggerBuilder.Create()
                 .WithIdentity($"trigger-{task.Id}")
                 .WithCronSchedule(task.CronExpression)
                 .Build();
 
+            // Schedule the job with the Quartz scheduler using the defined job and trigger.
             await scheduler.ScheduleJob(job, trigger);
         }
 
+        // Validates the given cron expression to ensure it is properly formatted.
+        // Returns true if the expression is valid, otherwise false.
         private bool IsValidCronExpression(string cronExpression)
         {
             try
             {
+                // Validate the cron expression using Quartz's built-in validator.
                 Quartz.CronExpression.ValidateExpression(cronExpression);
                 return true;
             }
             catch (FormatException)
             {
+                // Return false if the expression is invalid.
                 return false;
             }
         }
+
     }
 }
