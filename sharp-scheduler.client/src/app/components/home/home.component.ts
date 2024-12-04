@@ -14,6 +14,7 @@ export class HomeComponent implements OnInit {
   user = this.authService.currentUser;
   jobs: Job[] = [];
   jobForm!: FormGroup;
+  editingJob: Job | null = null;
 
   constructor(public authService: AuthService, private router: Router, private jobService: JobService) { }
 
@@ -55,6 +56,35 @@ export class HomeComponent implements OnInit {
     this.jobService.updateJobStatus(job.id, updatedStatus).subscribe(() => {
       job.isActive = updatedStatus;
     });
+  }
+
+  editJob(job: Job) {
+    this.editingJob = job;
+    this.jobForm.setValue({
+      name: job.name,
+      command: job.command,
+      cronExpression: job.cronExpression,
+      isActive: job.isActive
+    });
+  }
+
+  updateJob() {
+    if (this.jobForm.valid && this.editingJob) {
+      const updatedJob = { ...this.editingJob, ...this.jobForm.value };
+
+      this.jobService.updateJob(updatedJob.id, updatedJob).subscribe(response => {
+        this.loadJobs();
+
+        this.cancelEdit();
+      }, error => {
+        console.error('Error updating job', error);
+      });
+    }
+  }
+
+  cancelEdit() {
+    this.editingJob = null;
+    this.jobForm.reset({ isActive: true });
   }
 
   logout() {

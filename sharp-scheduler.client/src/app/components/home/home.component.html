@@ -11,7 +11,8 @@
         <div class="card mt-4">
           <div class="card-body">
             <h2 class="card-title text-center">Scheduled Jobs</h2>
-            <form [formGroup]="jobForm" (ngSubmit)="addJob()">
+  
+            <form [formGroup]="jobForm" (ngSubmit)="editingJob ? updateJob() : addJob()">
               <div class="form-group">
                 <label for="jobName">Job Name</label>
                 <input id="jobName" formControlName="name" class="form-control" required />
@@ -40,7 +41,10 @@
                 <label for="isActive">Active</label>
                 <input id="isActive" type="checkbox" formControlName="isActive" />
               </div>
-              <button type="submit" class="btn btn-success" [disabled]="jobForm.invalid">Add Job</button>
+              <button type="submit" class="btn btn-success" [disabled]="jobForm.invalid">
+                {{ editingJob ? 'Update Job' : 'Add Job' }}
+              </button>
+              <button type="button" (click)="cancelEdit()" *ngIf="editingJob" class="btn btn-secondary ml-2">Cancel Edit</button>
             </form>
   
             <ul class="list-group mt-3">
@@ -53,6 +57,7 @@
                   </div>
                   <div>
                     <button (click)="toggleActive(job)" class="btn btn-warning btn-sm">Toggle Status</button>
+                    <button (click)="editJob(job)" class="btn btn-info btn-sm">Edit</button>
                     <button (click)="deleteJob(job.id)" class="btn btn-danger btn-sm">Delete</button>
                   </div>
                 </div>

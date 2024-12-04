@@ -26,4 +26,8 @@ export class JobService {
   updateJobStatus(id: number, active: boolean): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}/active`, { active });
   }
+
+  updateJob(id: number, job: Job): Observable<Job> {
+    return this.http.put<Job>(`${this.apiUrl}/${id}`, job);
+  }
 }
