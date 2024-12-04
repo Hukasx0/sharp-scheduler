@@ -15,6 +15,8 @@ export class HomeComponent implements OnInit {
   jobs: Job[] = [];
   jobForm!: FormGroup;
   editingJob: Job | null = null;
+  currentPage: number = 1;
+  totalPages: number = 1;
 
   constructor(public authService: AuthService, private router: Router, private jobService: JobService) { }
 
@@ -29,9 +31,11 @@ export class HomeComponent implements OnInit {
     this.loadJobs();
   }
 
-  loadJobs() {
-    this.jobService.getJobs().subscribe(response => {
+  loadJobs(page: number = this.currentPage) {
+    this.jobService.getJobs(page).subscribe(response => {
       this.jobs = response.jobs;
+      this.totalPages = response.totalPages;
+      this.currentPage = response.currentPage;
     });
   }
 
@@ -85,6 +89,18 @@ export class HomeComponent implements OnInit {
   cancelEdit() {
     this.editingJob = null;
     this.jobForm.reset({ isActive: true });
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.loadJobs(this.currentPage + 1);
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.loadJobs(this.currentPage - 1);
+    }
   }
 
   logout() {

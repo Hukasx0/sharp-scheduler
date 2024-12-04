@@ -11,8 +11,8 @@ export class JobService {
 
   constructor(private http: HttpClient) { }
 
-  getJobs(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+  getJobs(page: number = 1, pageSize: number = 5): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?page=${page}&pageSize=${pageSize}`);
   }
 
   addJob(job: Job): Observable<Job> {

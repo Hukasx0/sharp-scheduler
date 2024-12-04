@@ -38,7 +38,7 @@ namespace sharp_scheduler.Server.Controllers
             var totalPages = (int)Math.Ceiling((double)totalJobs / pageSize);
 
             var jobs = await jobsQuery
-                .OrderBy(j => j.CreatedAt)
+                .OrderByDescending(j => j.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

@@ -31,7 +31,7 @@
                 <label for="cronExpression">Cron Expression (Quartz .NET format)</label>
                 <input id="cronExpression" formControlName="cronExpression" class="form-control" required />
                 <div *ngIf="jobForm.controls['cronExpression'].invalid && jobForm.controls['cronExpression'].touched" class="text-danger">
-                  Invalid Cron Expression format.
+                  Invalid Cron Expression (Quartz .NET format).
                 </div>
                 <small class="form-text text-muted">
                   <a href="http://www.cronmaker.com/" target="_blank">Click here to generate a Cron Expression</a>
@@ -53,7 +53,8 @@
                   <div>
                     <strong>{{ job.name }}</strong><br />
                     <small>{{ job.cronExpression }}</small><br />
-                    <small>Status: {{ job.isActive ? 'Active' : 'Inactive' }}</small>
+                    <small>Status: {{ job.isActive ? 'Active' : 'Inactive' }}</small><br />
+                    <small><strong>Job ID:</strong> {{ job.id }}</small>
                   </div>
                   <div>
                     <button (click)="toggleActive(job)" class="btn btn-warning btn-sm">Toggle Status</button>
@@ -63,8 +64,14 @@
                 </div>
               </li>
             </ul>
+  
+            <div class="d-flex justify-content-between mt-3">
+              <button class="btn btn-info" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+              <button class="btn btn-info" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+            </div>
+  
             <div>
-                <button class="btn btn-info" (click)="goToLogs()">View Logs</button>
+              <button class="btn btn-info mt-3" (click)="goToLogs()">View Logs</button>
             </div>
           </div>
         </div>
