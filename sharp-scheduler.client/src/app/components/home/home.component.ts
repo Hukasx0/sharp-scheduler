@@ -21,7 +21,7 @@ export class HomeComponent implements OnInit {
     this.jobForm = new FormGroup({
       name: new FormControl('', Validators.required),
       command: new FormControl('', Validators.required),
-      cronExpression: new FormControl('', Validators.required),
+      cronExpression: new FormControl('', [Validators.required]),
       isActive: new FormControl(true)
     });
 
