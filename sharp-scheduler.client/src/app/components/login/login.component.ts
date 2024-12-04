@@ -6,13 +6,15 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
   loginForm = this.fb.group({
     username: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
+
+  errorMessage: string = '';
 
   constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {}
 
@@ -25,6 +27,7 @@ export class LoginComponent {
           this.router.navigate(['/']);
         },
         error: (error) => {
+          this.errorMessage = 'Invalid username or password. Please try again.';
           this.loginForm.reset();
           console.error('Login error:', error);
         }
