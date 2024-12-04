@@ -69,10 +69,15 @@
               <button class="btn btn-info" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
               <button class="btn btn-info" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
             </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-info" (click)="refreshJobs()">Refresh</button>
+            </div>
   
             <div>
               <button class="btn btn-info mt-3" (click)="goToLogs()">View Logs</button>
             </div>
+
           </div>
         </div>
       </div>

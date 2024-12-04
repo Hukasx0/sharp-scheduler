@@ -103,6 +103,11 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  refreshJobs() {
+    this.cancelEdit();
+    this.loadJobs();
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
