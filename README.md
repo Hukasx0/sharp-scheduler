@@ -2,6 +2,10 @@
 
 Sharp-Scheduler is a web application built with ASP.NET and Angular for scheduling and executing terminal commands using [Quartz.NET](https://www.quartz-scheduler.net/). It provides an admin interface for managing jobs, setting execution intervals, and viewing detailed logs. The application supports anti-brute-force protection and works with a PostgreSQL database.
 
+![webapp screenshot](https://raw.githubusercontent.com/Hukasx0/sharp-scheduler/main/webapp-screenshot.png)
+
+![swagger screenshot](https://raw.githubusercontent.com/Hukasx0/sharp-scheduler/main/swagger-screenshot.png)
+
 ## Features
 - Admin Authentication with anti-brute-force protection.
 - Job Scheduling: Add, edit, and delete scheduled terminal commands.
