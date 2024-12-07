@@ -102,3 +102,5 @@ The application will be available at:
 http://localhost:4200
 ```
 
+# License
+This project is licensed under the [MIT License](https://github.com/Hukasx0/sharp-scheduler/blob/main/LICENSE).
