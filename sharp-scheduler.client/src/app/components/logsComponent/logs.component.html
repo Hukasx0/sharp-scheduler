@@ -1,0 +1,35 @@
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Job Logs</h2>
+  
+    <div *ngIf="logs.length > 0">
+      <div *ngFor="let log of logs" class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Job name: <strong>{{ log.jobName }}</strong></h5>
+          <p class="card-text"><strong>Status:</strong> {{ log.status }}</p>
+          <p class="card-text"><strong>Timestamp:</strong> {{ log.timestamp }}</p>
+          <p class="card-text"><strong>Output:</strong> {{ log.output }}</p>
+          <p class="card-text"><strong>Error:</strong> {{ log.error || 'No error' }}</p>
+        </div>
+      </div>
+  
+      <div *ngIf="totalPages > 1" class="d-flex justify-content-center">
+        <button 
+          class="btn btn-primary mx-2" 
+          (click)="loadLogs(currentPage - 1)" 
+          [disabled]="currentPage === 1">
+          Previous
+        </button>
+        <button 
+          class="btn btn-primary mx-2" 
+          (click)="loadLogs(currentPage + 1)" 
+          [disabled]="currentPage === totalPages">
+          Next
+        </button>
+      </div>
+    </div>
+  
+    <div *ngIf="logs.length === 0" class="text-center">
+      <p>No logs available.</p>
+    </div>
+</div>
+  
