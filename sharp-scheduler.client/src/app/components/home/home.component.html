@@ -37,14 +37,16 @@
                   <a href="http://www.cronmaker.com/" target="_blank">Click here to generate a Cron Expression</a>
                 </small>
               </div>
-              <div class="form-group">
-                <label for="isActive">Active</label>
-                <input id="isActive" type="checkbox" formControlName="isActive" />
+              <div class="form-group mb-3 mt-1">
+                <label for="isActive" class="form-label">Active</label>
+                <input id="isActive" type="checkbox" formControlName="isActive" class="form-check-input ms-1" />
               </div>
-              <button type="submit" class="btn btn-success" [disabled]="jobForm.invalid">
-                {{ editingJob ? 'Update Job' : 'Add Job' }}
-              </button>
-              <button type="button" (click)="cancelEdit()" *ngIf="editingJob" class="btn btn-secondary ml-2">Cancel Edit</button>
+              <div class="text-center">
+                <button type="submit" class="btn btn-success btn-lg" [disabled]="jobForm.invalid">
+                  {{ editingJob ? 'Update Job' : 'Add Job' }}
+                </button>
+                <button type="button" (click)="cancelEdit()" *ngIf="editingJob" class="btn btn-secondary btn-lg ml-2 ms-2">Cancel Edit</button>
+              </div>
             </form>
   
             <ul class="list-group mt-3">
@@ -57,25 +59,25 @@
                     <small><strong>Job ID:</strong> {{ job.id }}</small>
                   </div>
                   <div>
-                    <button (click)="toggleActive(job)" class="btn btn-warning btn-sm">Toggle Status</button>
-                    <button (click)="editJob(job)" class="btn btn-info btn-sm">Edit</button>
-                    <button (click)="deleteJob(job.id)" class="btn btn-danger btn-sm">Delete</button>
+                    <button (click)="toggleActive(job)" class="btn btn-warning btn-sm ms-2">Toggle Status</button>
+                    <button (click)="editJob(job)" class="btn btn-info btn-sm ms-2">Edit</button>
+                    <button (click)="deleteJob(job.id)" class="btn btn-danger btn-sm ms-2">Delete</button>
                   </div>
                 </div>
               </li>
             </ul>
   
-            <div class="d-flex justify-content-between mt-3">
+            <div class="d-flex justify-content-between mt-4">
               <button class="btn btn-info" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
               <button class="btn btn-info" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
             </div>
 
-            <div class="d-flex justify-content-between mt-3">
-                <button class="btn btn-info" (click)="refreshJobs()">Refresh</button>
+            <div class="d-flex justify-content-center mt-3">
+              <button class="btn btn-info" (click)="refreshJobs()">Refresh</button>
             </div>
   
-            <div>
-              <button class="btn btn-info mt-3" (click)="goToLogs()">View Logs</button>
+            <div class="mt-3">
+              <button class="btn btn-secondary" (click)="goToLogs()">View Logs</button>
             </div>
 
           </div>
