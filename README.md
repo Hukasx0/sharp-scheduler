@@ -106,5 +106,8 @@ http://localhost:4200
 
 ![webapp screenshot](https://raw.githubusercontent.com/Hukasx0/sharp-scheduler/main/webapp-screenshot.png)
 
+## Disclaimer
+Please note that this application is **not intended for use in production environments**. It may contain bugs or security vulnerabilities that could impact its stability or security. The developer does not take responsibility for any damages, data loss, or other issues that may arise from using this software in production or otherwise. Use at your own risk.
+
 # License
 This project is licensed under the [MIT License](https://github.com/Hukasx0/sharp-scheduler/blob/main/LICENSE).
