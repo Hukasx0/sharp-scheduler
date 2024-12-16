@@ -40,4 +40,14 @@ export class JobService {
   getLogs(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/logs`);
   }
+
+  // Export jobs as a Sharp Scheduler cron file
+  exportJobsAsCronFile(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/export`, { responseType: 'blob' });
+  }
+
+  // Import jobs from a Sharp Scheduler cron file
+  importJobsFromCronFile(file: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/import`, file);
+  }
 }

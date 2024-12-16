@@ -1,35 +1,51 @@
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Job Logs</h2>
-  
-    <div *ngIf="logs.length > 0">
-      <div *ngFor="let log of logs" class="card mb-3">
-        <div class="card-body">
-          <h5 class="card-title">Job name: <strong>{{ log.jobName }}</strong></h5>
-          <p class="card-text"><strong>Status:</strong> {{ log.status }}</p>
-          <p class="card-text"><strong>Timestamp:</strong> {{ log.timestamp }}</p>
-          <p class="card-text"><strong>Output:</strong> {{ log.output }}</p>
-          <p class="card-text"><strong>Error:</strong> {{ log.error || 'No error' }}</p>
-        </div>
-      </div>
-  
-      <div *ngIf="totalPages > 1" class="d-flex justify-content-center">
-        <button 
-          class="btn btn-primary mx-2" 
-          (click)="loadLogs(currentPage - 1)" 
-          [disabled]="currentPage === 1">
-          Previous
-        </button>
-        <button 
-          class="btn btn-primary mx-2" 
-          (click)="loadLogs(currentPage + 1)" 
-          [disabled]="currentPage === totalPages">
-          Next
-        </button>
+  <!-- Title for the Job Logs page -->
+  <h2 class="text-center mb-4">Job Logs</h2>
+
+  <!-- Section for displaying logs if available -->
+  <div *ngIf="logs.length > 0">
+    
+    <!-- Loop through logs and display each log entry in a card -->
+    <div *ngFor="let log of logs" class="card mb-3">
+      <div class="card-body">
+        <!-- Job name display -->
+        <h5 class="card-title">Job name: <strong>{{ log.jobName }}</strong></h5>
+        
+        <!-- Job status display -->
+        <p class="card-text"><strong>Status:</strong> {{ log.status }}</p>
+        
+        <!-- Job timestamp display -->
+        <p class="card-text"><strong>Timestamp:</strong> {{ log.timestamp }}</p>
+        
+        <!-- Job output display -->
+        <p class="card-text"><strong>Output:</strong> {{ log.output }}</p>
+        
+        <!-- Job error display, with a fallback message if no error exists -->
+        <p class="card-text"><strong>Error:</strong> {{ log.error || 'No error' }}</p>
       </div>
     </div>
-  
-    <div *ngIf="logs.length === 0" class="text-center">
-      <p>No logs available.</p>
+
+    <!-- Pagination controls if there are multiple pages of logs -->
+    <div *ngIf="totalPages > 1" class="d-flex justify-content-center">
+      <!-- Button to go to the previous page -->
+      <button 
+        class="btn btn-primary mx-2" 
+        (click)="loadLogs(currentPage - 1)" 
+        [disabled]="currentPage === 1">
+        Previous
+      </button>
+      <!-- Button to go to the next page -->
+      <button 
+        class="btn btn-primary mx-2" 
+        (click)="loadLogs(currentPage + 1)" 
+        [disabled]="currentPage === totalPages">
+        Next
+      </button>
     </div>
+  </div>
+
+  <!-- Message displayed when there are no logs available -->
+  <div *ngIf="logs.length === 0" class="text-center">
+    <p>No logs available.</p>
+  </div>
 </div>
-  

@@ -129,4 +129,30 @@ export class HomeComponent implements OnInit {
   goToLogs() {
     this.router.navigate(['/logs']);
   }
+
+  // Export the jobs to a cron file
+  exportCronFile() {
+    this.jobService.exportJobsAsCronFile().subscribe((response: Blob) => {
+      const url = window.URL.createObjectURL(response);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'scheduled_jobs.cron';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
+  // Import jobs from a cron file
+  importCronFile(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      this.jobService.importJobsFromCronFile(formData).subscribe(() => {
+        this.refreshJobs();
+      }, error => {
+        console.error('Error importing jobs', error);
+      });
+    }
+  }
 }

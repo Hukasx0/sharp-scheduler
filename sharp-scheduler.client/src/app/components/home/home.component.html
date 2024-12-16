@@ -1,88 +1,106 @@
 <div class="container my-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card">
-          <div class="card-body">
-            <h1 class="card-title text-center">You're authorized</h1>
-            <button (click)="logout()" class="btn btn-primary">Logout</button>
-          </div>
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <!-- User Authorization Card -->
+      <div class="card mb-4">
+        <div class="card-body text-center">
+          <h1 class="card-title">You're authorized</h1>
+          <button (click)="logout()" class="btn btn-danger btn-lg">Logout</button>
         </div>
-  
-        <div class="card mt-4">
-          <div class="card-body">
-            <h2 class="card-title text-center">Scheduled Jobs</h2>
-  
-            <form [formGroup]="jobForm" (ngSubmit)="editingJob ? updateJob() : addJob()">
-              <div class="form-group">
-                <label for="jobName">Job Name</label>
-                <input id="jobName" formControlName="name" class="form-control" required />
-                <div *ngIf="jobForm.controls['name'].invalid && jobForm.controls['name'].touched" class="text-danger">
-                  Job Name is required.
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="command">Command</label>
-                <input id="command" formControlName="command" class="form-control" required />
-                <div *ngIf="jobForm.controls['command'].invalid && jobForm.controls['command'].touched" class="text-danger">
-                  Command is required.
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="cronExpression">Cron Expression (Quartz .NET format)</label>
-                <input id="cronExpression" formControlName="cronExpression" class="form-control" required />
-                <div *ngIf="jobForm.controls['cronExpression'].invalid && jobForm.controls['cronExpression'].touched" class="text-danger">
-                  Invalid Cron Expression (Quartz .NET format).
-                </div>
-                <small class="form-text text-muted">
-                  <a href="http://www.cronmaker.com/" target="_blank">Click here to generate a Cron Expression</a>
-                </small>
-              </div>
-              <div class="form-group mb-3 mt-1">
-                <label for="isActive" class="form-label">Active</label>
-                <input id="isActive" type="checkbox" formControlName="isActive" class="form-check-input ms-1" />
-              </div>
-              <div class="text-center">
-                <button type="submit" class="btn btn-success btn-lg" [disabled]="jobForm.invalid">
-                  {{ editingJob ? 'Update Job' : 'Add Job' }}
-                </button>
-                <button type="button" (click)="cancelEdit()" *ngIf="editingJob" class="btn btn-secondary btn-lg ml-2 ms-2">Cancel Edit</button>
-              </div>
-            </form>
-  
-            <ul class="list-group mt-3">
-              <li *ngFor="let job of jobs" class="list-group-item">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <strong>{{ job.name }}</strong><br />
-                    <small>{{ job.cronExpression }}</small><br />
-                    <small>Status: {{ job.isActive ? 'Active' : 'Inactive' }}</small><br />
-                    <small><strong>Job ID:</strong> {{ job.id }}</small>
-                  </div>
-                  <div>
-                    <button (click)="toggleActive(job)" class="btn btn-warning btn-sm ms-2">Toggle Status</button>
-                    <button (click)="editJob(job)" class="btn btn-info btn-sm ms-2">Edit</button>
-                    <button (click)="deleteJob(job.id)" class="btn btn-danger btn-sm ms-2">Delete</button>
-                  </div>
-                </div>
-              </li>
-            </ul>
-  
-            <div class="d-flex justify-content-between mt-4">
-              <button class="btn btn-info" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
-              <button class="btn btn-info" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
-            </div>
+      </div>
 
-            <div class="d-flex justify-content-center mt-3">
-              <button class="btn btn-info" (click)="refreshJobs()">Refresh</button>
-            </div>
-  
-            <div class="mt-3">
-              <button class="btn btn-secondary" (click)="goToLogs()">View Logs</button>
-            </div>
+      <!-- Scheduled Jobs Form Card -->
+      <div class="card">
+        <div class="card-body">
+          <h2 class="card-title text-center">Scheduled Jobs</h2>
 
+          <!-- Job Form -->
+          <form [formGroup]="jobForm" (ngSubmit)="editingJob ? updateJob() : addJob()">
+            <div class="form-group">
+              <label for="jobName">Job Name</label>
+              <input id="jobName" formControlName="name" class="form-control" placeholder="Enter job name" required />
+              <div *ngIf="jobForm.controls['name'].invalid && jobForm.controls['name'].touched" class="text-danger">
+                Job Name is required.
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="command">Command</label>
+              <input id="command" formControlName="command" class="form-control" placeholder="Enter command" required />
+              <div *ngIf="jobForm.controls['command'].invalid && jobForm.controls['command'].touched" class="text-danger">
+                Command is required.
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cronExpression">Cron Expression (Quartz .NET format)</label>
+              <input id="cronExpression" formControlName="cronExpression" class="form-control" placeholder="Enter cron expression" required />
+              <div *ngIf="jobForm.controls['cronExpression'].invalid && jobForm.controls['cronExpression'].touched" class="text-danger">
+                Invalid Cron Expression (Quartz .NET format).
+              </div>
+              <small class="form-text text-muted">
+                <a href="http://www.cronmaker.com/" target="_blank">Click here to generate a Cron Expression</a>
+              </small>
+            </div>
+            <div class="form-group mb-3 mt-1">
+              <label for="isActive" class="form-label">Active</label>
+              <input id="isActive" type="checkbox" formControlName="isActive" class="form-check-input ms-1" />
+            </div>
+            <div class="text-center">
+              <button type="submit" class="btn btn-success btn-lg" [disabled]="jobForm.invalid">
+                {{ editingJob ? 'Update Job' : 'Add Job' }}
+              </button>
+              <button type="button" (click)="cancelEdit()" *ngIf="editingJob" class="btn btn-secondary btn-lg ml-2">Cancel Edit</button>
+            </div>
+          </form>
+
+          <!-- Job List -->
+          <ul class="list-group mt-3">
+            <li *ngFor="let job of jobs" class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ job.name }}</strong><br />
+                <small>{{ job.cronExpression }}</small><br />
+                <small>Status: {{ job.isActive ? 'Active' : 'Inactive' }}</small><br />
+                <small><strong>Job ID:</strong> {{ job.id }}</small>
+              </div>
+              <div>
+                <button (click)="toggleActive(job)" class="btn btn-warning btn-sm ms-2">Toggle Status</button>
+                <button (click)="editJob(job)" class="btn btn-info btn-sm ms-2">Edit</button>
+                <button (click)="deleteJob(job.id)" class="btn btn-danger btn-sm ms-2">Delete</button>
+              </div>
+            </li>
+          </ul>
+
+          <!-- Pagination & Refresh -->
+          <div class="d-flex justify-content-between mt-4">
+            <button class="btn btn-info" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+            <button class="btn btn-info" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+          </div>
+
+          <div class="d-flex justify-content-center mt-3">
+            <button class="btn btn-info" (click)="refreshJobs()">Refresh</button>
+          </div>
+
+          <!-- View Logs Button -->
+          <div class="mt-3 text-center">
+            <button class="btn btn-secondary" (click)="goToLogs()">View Logs</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Import/Export Cron File -->
+      <div class="card mt-4">
+        <div class="card-body">
+          <h3 class="card-title text-center mb-3">Import/Export Jobs</h3>
+          <div class="d-flex justify-content-between align-items-center">
+            <button class="btn btn-success" (click)="exportCronFile()">Export Jobs</button>
+            <label class="btn btn-secondary btn-file">
+              Import Sharp Scheduler Cron File
+              <input type="file" (change)="importCronFile($event)" class="d-none" />
+            </label>
           </div>
         </div>
       </div>
+      
     </div>
+  </div>
 </div>
-  

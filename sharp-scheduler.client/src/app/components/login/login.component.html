@@ -1,20 +1,27 @@
 <div class="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+  <!-- Logo and Application Title -->
   <div class="d-flex align-items-center mb-4">
     <img src="/favicon.png" alt="Sharp Scheduler Logo" class="img-fluid" style="max-width: 40px; margin-right: 10px;">
     <h1 class="text-center mb-0">Sharp Scheduler</h1>
   </div>
 
+  <!-- Login Form -->
   <div class="row justify-content-center w-100">
     <div class="col-md-6 col-lg-4">
+      <!-- Card containing the login form -->
       <div class="card shadow-sm">
         <div class="card-body">
+          <!-- Title of the login section -->
           <h2 class="card-title text-center mb-4">Login</h2>
 
+          <!-- Error message alert -->
           <div *ngIf="errorMessage" class="alert alert-danger">
             {{ errorMessage }}
           </div>
 
+          <!-- Login Form -->
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <!-- Username Input Field -->
             <div class="mb-3">
               <label for="username" class="form-label">Username</label>
               <input
@@ -24,11 +31,13 @@
                 formControlName="username"
                 placeholder="Enter your username"
               />
+              <!-- Error message for username field if it's required and not filled -->
               <div *ngIf="loginForm.get('username')?.errors?.['required'] && loginForm.get('username')?.touched" class="text-danger">
                 Username is required
               </div>
             </div>
 
+            <!-- Password Input Field -->
             <div class="mb-3">
               <label for="password" class="form-label">Password</label>
               <input
@@ -38,11 +47,13 @@
                 formControlName="password"
                 placeholder="Enter your password"
               />
+              <!-- Error message for password field if it's required and not filled -->
               <div *ngIf="loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched" class="text-danger">
                 Password is required
               </div>
             </div>
 
+            <!-- Submit Button -->
             <button type="submit" [disabled]="loginForm.invalid" class="btn btn-primary w-100 mt-3">
               Login
             </button>
