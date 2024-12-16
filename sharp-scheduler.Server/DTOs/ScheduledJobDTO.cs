@@ -19,6 +19,14 @@
         public bool IsActive { get; set; }
     }
 
+    public class JobExportImportDTO
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Command { get; set; } = string.Empty;
+        public string CronExpression { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
     public class ActivateJobDTO
     {
         public bool active { get; set; }

@@ -7,6 +7,7 @@ using sharp_scheduler.Server.Data;
 using sharp_scheduler.Server.DTOs;
 using sharp_scheduler.Server.Models;
 using sharp_scheduler.Server.Services;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace sharp_scheduler.Server.Controllers
@@ -179,6 +180,7 @@ namespace sharp_scheduler.Server.Controllers
                     Command = newJob.Command,
                     CronExpression = newJob.CronExpression,
                     CreatedAt = DateTime.UtcNow,
+                    IsActive = newJob.IsActive
                 };
 
                 jobsToAdd.Add(job);
@@ -309,6 +311,100 @@ namespace sharp_scheduler.Server.Controllers
             await scheduler.DeleteJob(new JobKey($"job-{job.Id}"));
 
             return NoContent();
+        }
+
+        // Export scheduled jobs as a Sharp Scheduler cron file.
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportJobsToCronFile()
+        {
+            // Fetch the scheduled jobs from the database and map them to a JobExportImportDTO.
+            var jobs = await _context.ScheduledJobs
+                .Select(j => new JobExportImportDTO
+                {
+                    Name = j.Name,
+                    Command = j.Command,
+                    CronExpression = j.CronExpression,
+                    IsActive = j.IsActive
+                })
+                .ToListAsync();
+
+            // StringBuilder is used to construct the cron file content.
+            var cronContent = new StringBuilder();
+
+            // Loop through each job and format its details into the cron content.
+            foreach (var job in jobs)
+            {
+                // Add a comment line with the job name.
+                cronContent.AppendLine($"# Name: {job.Name}");
+                // Add the cron expression and command for the job, separated by '\t' (tab).
+                cronContent.AppendLine($"{job.CronExpression}\t{job.Command}");
+                // Add an empty line between jobs for better readability.
+                cronContent.AppendLine();
+            }
+
+            // Generate a file name with the current UTC timestamp.
+            var fileName = $"scheduled_jobs_export_{DateTime.UtcNow:yyyyMMdd_HHmmss}.cron";
+
+            // Convert the cron content to a byte array.
+            var fileBytes = Encoding.UTF8.GetBytes(cronContent.ToString());
+
+            // Return the file as a response with text/plain MIME type.
+            return File(fileBytes, "text/plain", fileName);
+        }
+
+        // This endpoint is used to import scheduled jobs from a Sharp Scheduler cron file.
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportJobsFromCronFile(IFormFile file)
+        {
+            // Check if the file is null or empty.
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            // Read the contents of the uploaded file.
+            using var reader = new StreamReader(file.OpenReadStream());
+            var fileContent = await reader.ReadToEndAsync();
+
+            // Split the file content into lines, removing empty entries.
+            var lines = fileContent.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var jobsToImport = new List<ScheduledJobPostDTO>();
+
+            // Loop through each line of the Sharp Scheduler cron file.
+            for (int i = 0; i < lines.Length; i++)
+            {
+                // Check if the line starts with a comment and contains "Name:" (i.e., it's a job description).
+                if (lines[i].StartsWith("#") && lines[i].Contains("Name:"))
+                {
+                    // Extract the job name from the comment line.
+                    var jobName = lines[i].Replace("# Name:", "").Trim();
+
+                    // Check if the next line contains the cron expression and command.
+                    if (i + 1 < lines.Length)
+                    {
+                        var cronLine = lines[i + 1].Trim();
+                        var parts = cronLine.Split(new[] { '\t' }, 2); // Split on '\t' (tab) to separate cron expression and command
+
+                        // If the line has two parts (cron expression and command), add the job to the import list.
+                        if (parts.Length == 2)
+                        {
+                            jobsToImport.Add(new ScheduledJobPostDTO
+                            {
+                                Name = jobName,
+                                CronExpression = parts[0],
+                                Command = parts[1],
+                                IsActive = true // Default to active.
+                            });
+
+                            // Skip the next line since it's already processed.
+                            i++;
+                        }
+                    }
+                }
+            }
+
+            // Create the scheduled jobs in the database.
+            return await CreateMany(jobsToImport);
         }
 
         [HttpGet("logs")]
