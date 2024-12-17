@@ -21,7 +21,7 @@ export class LogsComponent implements OnInit {
 
   // Load logs from the job service
   loadLogs(page: number = 1) {
-    this.jobService.getLogs().subscribe(response => {
+    this.jobService.getLogs(page).subscribe(response => {
       this.logs = response.logs;
       this.totalLogs = response.totalLogs;
       this.totalPages = response.totalPages;

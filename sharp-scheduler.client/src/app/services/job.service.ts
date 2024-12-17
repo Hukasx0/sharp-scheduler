@@ -37,8 +37,8 @@ export class JobService {
   }
 
   // Get logs related to jobs
-  getLogs(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/logs`);
+  getLogs(page: number = 1, pageSize: number = 50): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/logs?page=${page}&pageSize=${pageSize}`);
   }
 
   // Export jobs as a Sharp Scheduler cron file
